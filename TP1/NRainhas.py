@@ -6,6 +6,7 @@ Este é um arquivo de script temporário.
 """
 import random
 import math
+import numpy as np
 # Solution example
 # [5,1,8,4,2,7,3,6]
 
@@ -68,7 +69,7 @@ def cutAndCrossFillCrossover(parents):
     positionsSeq = list(range(1, N)) # Sequence from 1 to (N)
     # Get one positions without repetition
     pos = random.sample(positionsSeq, 1)[0];
-    print(pos);
+
     offspring1[0:pos] = parents[0][0:pos];
     offspring2[0:pos] = parents[1][0:pos];
     s1 = pos;
@@ -111,11 +112,15 @@ def selectParents(population, populationFitness):
 
 # Number of individuals in the population
 K = 100;
-pM = 10; # 10%
+pM = 50; # 10%
 interation = 0;
 population = createNewPopulation(K);
 populationFitness = evalPopulationFitness(population);
 checkHasFoundSolution(populationFitness);
+
+meanFitness = [];
+minFitness = [];
+maxFitness = [];
 
 while(checkHasFoundSolution(populationFitness) == False):
     interation = interation + 1;
@@ -137,6 +142,12 @@ while(checkHasFoundSolution(populationFitness) == False):
     
     population = list(population[0:K]);
     populationFitness = list(populationFitness[0:K]);
+    
+    print(np.mean(populationFitness));
+    
+    meanFitness.append(np.mean(populationFitness));
+    minFitness.append(np.min(populationFitness));
+    maxFitness.append(np.max(populationFitness));
 
 
 print(checkHasFoundSolution(populationFitness));

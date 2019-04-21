@@ -31,7 +31,7 @@ def split(arr, size):
      arrs.append(arr)
      return arrs
 
-def rastringin(x, n):           # F.O. Rantringin
+def rastrigin(x, n):           # F.O. Rantringin
     soma = 0.0
     for i in range(n):
         soma = soma + x[i]**2 - 10*np.cos(2*np.pi*x[i])
@@ -47,6 +47,20 @@ def createNewPopulation(N):
         population.append(list(np.random.choice([0, 1], size=(100,), p=[1./2, 1./2])));
     return population;
 
+def getIndividualVariables(item):
+    variableList = [];
+    variablesBin = split(item, 10);
+    for variable in variablesBin:
+        variableList.append(binToDecimal(variable));
+        
+    return variableList;
+
+def getIndividualRealFitness(item):
+    variableList = getIndividualVariables(item);
+    fitnessValue = rastrigin(variableList, 10);
+    
+    return fitnessValue;
+
 def evalPopulationFitness(population):
     fitness = [];
     variableList = [];
@@ -55,7 +69,8 @@ def evalPopulationFitness(population):
         for variable in variablesBin:
             variableList.append(binToDecimal(variable));
 
-        fitnessValue = 1/(rastringin(variableList, 10) + 0.001);
+        fitnessValue = 1/(rastrigin(variableList, 10) + 0.001);
+        #fitnessValue = rastrigin(variableList, 10);
         fitness.append(fitnessValue);
         variableList = [];
     return fitness;
@@ -109,6 +124,8 @@ def tournament(population, populationFitness):
     
     # Return the two best individuals
     return [individuals[numberOfIndividuals - 1], individuals[numberOfIndividuals - 2]];
+    #return [individuals[0], individuals[1]];
+
 
 def bitflipMutation(child, pM):
     mutatedChild = [];
@@ -131,35 +148,54 @@ def checkHasFoundSolution(fitnessList):
 #--------------------------------Main program---------------------------------#
 
 # Number of individuals in the population
-K = 100;
-pM = 5; # 5%
-pC = 60 # 60%
+K = 50;
+pM = 2; # 5%
+pC = 60; # 60%
 interation = 0;
 population = createNewPopulation(K);
 populationFitness = evalPopulationFitness(population);
 checkHasFoundSolution(populationFitness);
 
+bestSolution = population[np.argmax(populationFitness)];
+bestSolutionFitness = np.max(populationFitness);
+bestSolutionRealFitness = getIndividualRealFitness(bestSolution);
+
 meanFitness = [];
 minFitness = [];
 maxFitness = [];
 
-while(checkHasFoundSolution(populationFitness) == False):
+meanFitness.append(np.mean(populationFitness));
+minFitness.append(np.min(populationFitness));
+maxFitness.append(np.max(populationFitness));
+
+while(checkHasFoundSolution(populationFitness) == False) & (interation != (10000)):
+    print(interation);
     interation = interation + 1;
     newPopulation = [];
     
-    for i in range(0, K/2):
+    for i in range(0, int(K/2)):
         if random.sample(range(0,100), 1)[0] < 50:
             selectedParents = whell(population, populationFitness);        
         else:
             selectedParents = tournament(population, populationFitness);
             
-        if random.sample(range(0,100), 1)[0] < pC:    
+        if random.sample(range(0,100), 1)[0] < pC:
             children = crossoverByVariable(selectedParents);
             children[0] = bitflipMutation(children[0], pM);
             children[1] = bitflipMutation(children[1], pM);
             newPopulation.extend(children);
         else:
             newPopulation.extend(selectedParents);
+            
+    population = newPopulation;
+    populationFitness = evalPopulationFitness(population);
+    
+    if bestSolutionFitness < np.max(populationFitness):
+        bestSolution = population[np.argmax(populationFitness)];
+        bestSolutionFitness = np.max(populationFitness);
+        bestSolutionRealFitness = getIndividualRealFitness(bestSolution);
+        
+    print(bestSolutionRealFitness);
         
     meanFitness.append(np.mean(populationFitness));
     minFitness.append(np.min(populationFitness));

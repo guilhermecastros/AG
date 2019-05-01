@@ -22,6 +22,18 @@ def binToDecimal(binaryArray):
    value = Li + (Ui - Li)*(intValue/(2**nBits - 1));
    return value;
 
+def grayToBinary(grayArray):
+    binArray = [];
+    binArray.append(grayArray[0]);
+    
+    for i in range(1, len(grayArray)):
+        if binArray[i-1] == grayArray[i]:
+            binArray.append(0);
+        else:
+            binArray.append(1);
+            
+    return binArray;
+
 def split(arr, size):
      arrs = []
      while len(arr) > size:
@@ -38,38 +50,42 @@ def rastrigin(x, n):           # F.O. Rantringin
     f = 10*n + soma
     return f
 
-def createNewPopulation(N):
+def createNewPopulation(N, nvar):
     if N == 0:
         return [];
 
     population = [];
     for i in range(0, N):    
-        population.append(list(np.random.choice([0, 1], size=(100,), p=[1./2, 1./2])));
+        population.append(list(np.random.choice([0, 1], size=(10*nvar,), p=[1./2, 1./2])));
     return population;
 
 def getIndividualVariables(item):
     variableList = [];
     variablesBin = split(item, 10);
     for variable in variablesBin:
-        variableList.append(binToDecimal(variable));
+        variableBin = grayToBinary(variable);
+        variableList.append(binToDecimal(variableBin));
+        #variableList.append(binToDecimal(variable));
         
     return variableList;
 
-def getIndividualRealFitness(item):
+def getIndividualRealFitness(item, nvar):
     variableList = getIndividualVariables(item);
-    fitnessValue = rastrigin(variableList, 10);
+    fitnessValue = rastrigin(variableList, nvar);
     
     return fitnessValue;
 
-def evalPopulationFitness(population):
+def evalPopulationFitness(population, nvar):
     fitness = [];
     variableList = [];
     for item in population:
         variablesBin = split(item, 10);
         for variable in variablesBin:
-            variableList.append(binToDecimal(variable));
+            variableBin = grayToBinary(variable);
+            variableList.append(binToDecimal(variableBin));
+            #variableList.append(binToDecimal(variable));
 
-        fitnessValue = 1/(rastrigin(variableList, 10) + 0.001);
+        fitnessValue = 1/(rastrigin(variableList, nvar) + 0.001);
         #fitnessValue = rastrigin(variableList, 10);
         fitness.append(fitnessValue);
         variableList = [];
@@ -147,59 +163,73 @@ def checkHasFoundSolution(fitnessList):
 
 #--------------------------------Main program---------------------------------#
 
-# Number of individuals in the population
-K = 50;
-pM = 2; # 5%
-pC = 60; # 60%
-interation = 0;
-population = createNewPopulation(K);
-populationFitness = evalPopulationFitness(population);
-checkHasFoundSolution(populationFitness);
-
-bestSolution = population[np.argmax(populationFitness)];
-bestSolutionFitness = np.max(populationFitness);
-bestSolutionRealFitness = getIndividualRealFitness(bestSolution);
-
-meanFitness = [];
-minFitness = [];
-maxFitness = [];
-
-meanFitness.append(np.mean(populationFitness));
-minFitness.append(np.min(populationFitness));
-maxFitness.append(np.max(populationFitness));
-
-while(checkHasFoundSolution(populationFitness) == False) & (interation != (10000)):
-    print(interation);
-    interation = interation + 1;
-    newPopulation = [];
+def guilherme_castro(nvar, ncal):
+    # Number of individuals in the population
+    K = 50;
+    pM = 2; # 5%
+    pC = 60; # 60%
+    interation = 0;
+    population = createNewPopulation(K, nvar);
+    populationFitness = evalPopulationFitness(population, nvar);
+    checkHasFoundSolution(populationFitness);
     
-    for i in range(0, int(K/2)):
-        if random.sample(range(0,100), 1)[0] < 50:
-            selectedParents = whell(population, populationFitness);        
-        else:
-            selectedParents = tournament(population, populationFitness);
-            
-        if random.sample(range(0,100), 1)[0] < pC:
-            children = crossoverByVariable(selectedParents);
-            children[0] = bitflipMutation(children[0], pM);
-            children[1] = bitflipMutation(children[1], pM);
-            newPopulation.extend(children);
-        else:
-            newPopulation.extend(selectedParents);
-            
-    population = newPopulation;
-    populationFitness = evalPopulationFitness(population);
+    bestSolution = population[np.argmax(populationFitness)];
+    bestSolutionFitness = np.max(populationFitness);
+    bestSolutionRealFitness = getIndividualRealFitness(bestSolution, nvar);
     
-    if bestSolutionFitness < np.max(populationFitness):
-        bestSolution = population[np.argmax(populationFitness)];
-        bestSolutionFitness = np.max(populationFitness);
-        bestSolutionRealFitness = getIndividualRealFitness(bestSolution);
-        
-    print(bestSolutionRealFitness);
-        
+    meanFitness = [];
+    minFitness = [];
+    maxFitness = [];
+    
     meanFitness.append(np.mean(populationFitness));
     minFitness.append(np.min(populationFitness));
     maxFitness.append(np.max(populationFitness));
+    
+    avaliation = 0;
+    
+    while((checkHasFoundSolution(populationFitness) == False) & (avaliation < ncal)):
+        #print(interation);
+        interation = interation + 1;
+        newPopulation = [];
+        newPopulationFitness = [];
+        selectedParents = [];
+        
+        for i in range(0, 10):
+            if random.sample(range(0,100), 1)[0] < 50:
+                selectedParents = whell(population, populationFitness);
+            else:
+                selectedParents = tournament(population, populationFitness);
+                
+            if random.sample(range(0,100), 1)[0] < pC:
+                children = crossoverByVariable(selectedParents);
+                children[0] = bitflipMutation(children[0], pM);
+                children[1] = bitflipMutation(children[1], pM);
+                newPopulation.extend(children);
+                avaliation = avaliation + 2;
+            #else:
+            #    newPopulation.extend(selectedParents);
+                
+        #population = newPopulation;
+        newPopulationFitness = evalPopulationFitness(newPopulation, nvar);
+    
+        population.extend(newPopulation);
+        populationFitness.extend(newPopulationFitness);
+        
+        populationFitness, population = zip(*sorted(zip(populationFitness, population)));
+        
+        population = list(population[len(newPopulation):]);
+        populationFitness = list(populationFitness[len(newPopulation):]);
+        
+        if bestSolutionFitness < np.max(populationFitness):
+            bestSolution = population[np.argmax(populationFitness)];
+            bestSolutionFitness = np.max(populationFitness);
+            bestSolutionRealFitness = getIndividualRealFitness(bestSolution, nvar);
+            
+        meanFitness.append(np.mean(populationFitness));
+        minFitness.append(np.min(populationFitness));
+        maxFitness.append(np.max(populationFitness));
+        
+    return [bestSolution, bestSolutionRealFitness]
     
     
     

@@ -7,6 +7,7 @@ Este é um arquivo de script temporário.
 import random
 import math
 import numpy as np
+import matplotlib.pyplot as plt
 # Solution example
 # [5,1,8,4,2,7,3,6]
 
@@ -110,44 +111,53 @@ def selectParents(population, populationFitness):
     
 #--------------------------------Main program---------------------------------#
 
-# Number of individuals in the population
-K = 100;
-pM = 50; # 10%
-interation = 0;
-population = createNewPopulation(K);
-populationFitness = evalPopulationFitness(population);
-checkHasFoundSolution(populationFitness);
-
-meanFitness = [];
-minFitness = [];
-maxFitness = [];
-
-while(checkHasFoundSolution(populationFitness) == False):
-    interation = interation + 1;
-    selectedParents = selectParents(population, populationFitness);
-    children = cutAndCrossFillCrossover(selectedParents);
+def guilherme_castro():
+    # Number of individuals in the population
+    K = 100;
+    pM = 10; # 60%
+    interation = 0;
+    population = createNewPopulation(K);
+    populationFitness = evalPopulationFitness(population);
+    checkHasFoundSolution(populationFitness);
     
-    if random.sample(range(0,100), 1)[0] < pM:
-        children[0] = mutation(children[0]);
+    meanFitness = [];
+    minFitness = [];
+    maxFitness = [];
+    
+    while((checkHasFoundSolution(populationFitness) == False) & (interation != (5000))):
+        interation = interation + 1;
+        selectedParents = selectParents(population, populationFitness);
+        children = cutAndCrossFillCrossover(selectedParents);
         
-    if random.sample(range(0,100), 1)[0] < pM:
-        children[1] = mutation(children[1]);
+        if random.sample(range(0,100), 1)[0] < pM:
+            children[0] = mutation(children[0]);
+            
+        if random.sample(range(0,100), 1)[0] < pM:
+            children[1] = mutation(children[1]);
+        
+        childrenFitness = evalPopulationFitness(children);
+        
+        population.extend(children);
+        populationFitness.extend(childrenFitness);
+        
+        populationFitness, population = zip(*sorted(zip(populationFitness, population)));
+        
+        population = list(population[0:K]);
+        populationFitness = list(populationFitness[0:K]);
+        
+        meanFitness.append(np.mean(populationFitness));
+        minFitness.append(np.min(populationFitness));
+        maxFitness.append(np.max(populationFitness));
+        
+    return [population[np.argmin(populationFitness)], np.min(populationFitness)];
     
-    childrenFitness = evalPopulationFitness(children);
     
-    population.extend(children);
-    populationFitness.extend(childrenFitness);
-    
-    populationFitness, population = zip(*sorted(zip(populationFitness, population)));
-    
-    population = list(population[0:K]);
-    populationFitness = list(populationFitness[0:K]);
-    
-    print(np.mean(populationFitness));
-    
-    meanFitness.append(np.mean(populationFitness));
-    minFitness.append(np.min(populationFitness));
-    maxFitness.append(np.max(populationFitness));
+    #plt.plot(meanFitness,label = 'Colisões Médio')
+    #plt.plot(minFitness,label = 'Colisões Mínimo')
+    #plt.plot(maxFitness,label = 'Colisões Máximo')
+    #plt.legend()
+    #plt.show()
 
 
-print(checkHasFoundSolution(populationFitness));
+
+

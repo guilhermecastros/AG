@@ -114,7 +114,7 @@ def selectParents(population, populationFitness):
 def guilherme_castro():
     # Number of individuals in the population
     K = 100;
-    pM = 10; # 60%
+    pM = 60; # Probability of mutation
     interation = 0;
     population = createNewPopulation(K);
     populationFitness = evalPopulationFitness(population);

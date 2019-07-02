@@ -166,8 +166,8 @@ def checkHasFoundSolution(fitnessList):
 def guilherme_castro(nvar, ncal):
     # Number of individuals in the population
     K = 50;
-    pM = 2; # 5%
-    pC = 60; # 60%
+    pM = 2; # Mutation probability
+    pC = 60; # Crossover probability
     interation = 0;
     population = createNewPopulation(K, nvar);
     populationFitness = evalPopulationFitness(population, nvar);
@@ -181,9 +181,9 @@ def guilherme_castro(nvar, ncal):
     minFitness = [];
     maxFitness = [];
     
-    meanFitness.append(np.mean(populationFitness));
-    minFitness.append(np.min(populationFitness));
-    maxFitness.append(np.max(populationFitness));
+    #meanFitness.append(np.mean(populationFitness));
+    #minFitness.append(np.min(populationFitness));
+    #maxFitness.append(np.max(populationFitness));
     
     avaliation = 0;
     
@@ -206,10 +206,7 @@ def guilherme_castro(nvar, ncal):
                 children[1] = bitflipMutation(children[1], pM);
                 newPopulation.extend(children);
                 avaliation = avaliation + 2;
-            #else:
-            #    newPopulation.extend(selectedParents);
-                
-        #population = newPopulation;
+
         newPopulationFitness = evalPopulationFitness(newPopulation, nvar);
     
         population.extend(newPopulation);
@@ -225,9 +222,13 @@ def guilherme_castro(nvar, ncal):
             bestSolutionFitness = np.max(populationFitness);
             bestSolutionRealFitness = getIndividualRealFitness(bestSolution, nvar);
             
-        meanFitness.append(np.mean(populationFitness));
-        minFitness.append(np.min(populationFitness));
-        maxFitness.append(np.max(populationFitness));
+        popRealFitness = [];
+        for i in range(0, int(len(populationFitness))):
+            popRealFitness.append(getIndividualRealFitness(population[i], nvar));
+            
+        meanFitness.append(np.mean(popRealFitness));
+        minFitness.append(np.min(popRealFitness));
+        maxFitness.append(np.max(popRealFitness));
         
     return [bestSolution, bestSolutionRealFitness]
     

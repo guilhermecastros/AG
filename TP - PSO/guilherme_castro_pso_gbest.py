@@ -25,7 +25,7 @@ def rastrigin(x):           # F.O. Rantringin
 
 #--- MAIN 
 class Particle:
-    def __init__(self,particle_dim, costFunc):
+    def __init__(self,particle_dim):
         self.position_i=[]          # particle position
         self.velocity_i=[]          # particle velocity
         self.pos_best_i=[]          # best position individual
@@ -36,9 +36,6 @@ class Particle:
         self.position_i = np.random.uniform(-100,100, size=(particle_dim))
         # Initialize particle velocities using a uniform distribution
         self.velocity_i = np.random.uniform(0, 0, size=(particle_dim))
-        
-        self.pos_gbest_i= self.position_i                # value for group
-        self.value_gbest_i= costFunc(self.pos_gbest_i)   # value for group
 
     # evaluate current fitness
     def evaluate(self,costFunc):
@@ -50,13 +47,13 @@ class Particle:
             self.value_best_i = self.value_i
 
     # update new particle velocity
-    def update_velocity(self):
+    def update_velocity(self,pos_best_g):
         c1 = 2.05   # cognative constant
         c2 = 2.05   # social constant
         r1=random.random()
         r2=random.random()
 
-        new_v = XX*(w*self.velocity_i + (c1 * r1 * (self.pos_best_i - self.position_i)) + (c2 * r2 * (self.pos_gbest_i - self.position_i)))
+        new_v = XX*(w*self.velocity_i + (c1 * r1 * (self.pos_best_i - self.position_i)) + (c2 * r2 * (pos_best_g - self.position_i)))
         self.velocity_i = new_v;
 
     # update the particle position based off new velocity updates
@@ -72,29 +69,6 @@ class Particle:
             if self.position_i[i] < bounds[0]:
                 self.position_i[i] = bounds[0]
                 
-    def local_gbest(self, index, swarm):
-        neighbors = [];
-        neighbors_index = [];
-    
-        n_particles = len(swarm);
-
-        if index == 0:
-            neighbors_index = [n_particles - 1, index, index + 1]
-            neighbors = [swarm[n_particles - 1], swarm[index], swarm[index + 1]]
-        elif (index == (n_particles - 1)):
-            neighbors_index = [index - 1, index, 0]
-            neighbors = [swarm[index - 1], swarm[index], swarm[0]]
-        else:
-            neighbors_index = [index - 1, index, index + 1]
-            neighbors = [swarm[index - 1], swarm[index], swarm[index + 1]]
-            
-        min_index = np.argmin([neighbors[0].value_best_i, neighbors[1].value_best_i, neighbors[2].value_best_i]);
-
-        self.value_gbest_i = swarm[neighbors_index[min_index]].value_best_i
-        self.pos_gbest_i = swarm[neighbors_index[min_index]].pos_best_i
-    
-        return swarm;
-                
 class PSO():
     def __init__(self):
         pass
@@ -109,10 +83,8 @@ class PSO():
         # establish the swarm
         swarm=[]
         for i in range(0,num_particles):
-            swarm.append(Particle(particle_dim, costFunc))
-            swarm[i].evaluate(costFunc)
-        
-        #print('teste: ' + str(swarm[1].pos_gbest_i))
+            swarm.append(Particle(particle_dim))
+
         # begin optimization loop
         i=0
         while i < maxiter:
@@ -120,30 +92,27 @@ class PSO():
             # cycle through particles in swarm and evaluate fitness
             for j in range(0,num_particles):
                 swarm[j].evaluate(costFunc)
-                swarm[j].local_gbest(j, swarm)
 
                 # determine if current particle is the best (globally)
-                if swarm[j].value_gbest_i < value_best_g or value_best_g == -1:
-                    pos_best_g=list(swarm[j].pos_gbest_i)
-                    value_best_g=float(swarm[j].value_gbest_i)
+                if swarm[j].value_i < value_best_g or value_best_g == -1:
+                    pos_best_g=list(swarm[j].position_i)
+                    value_best_g=float(swarm[j].value_i)
 
             # cycle through swarm and update velocities and position
-
             for j in range(0,num_particles):
-                swarm[j].update_velocity()
+                swarm[j].update_velocity(pos_best_g)
                 swarm[j].update_position(bounds)
             i+=1
 
         # print final results
-        print('FINAL:')
-        print(pos_best_g)
-        print(value_best_g)
-        
+        #print('FINAL:')
+        #print(pos_best_g)
+        #print(value_best_g)
+
         return pos_best_g, value_best_g
 
 if __name__ == "__PSO__":
     main()
-
 
 #--- EXECUTE
 # w (float): constant inertia weight (how much to weigh the previous velocity)
@@ -151,7 +120,7 @@ if __name__ == "__PSO__":
 global w, XX
 w = 0.5
 XX = 0.5
-particle_dim = 10
+particle_dim = 3
 bounds=[-100,100]  # input bounds [min, max]
 n_particles = 50
 n_func_valuation = 100000
@@ -160,13 +129,13 @@ maxiter = int(n_func_valuation/n_particles)
 results = [];
 for i in range(31):
     #     func=sphere / func=rastrigin
-    lbest = PSO();
-    res_s = lbest.optimize(costFunc=rastrigin, particle_dim=particle_dim,
+    gbest = PSO();
+    res_s = gbest.optimize(costFunc=sphere, particle_dim=particle_dim,
                            bounds=bounds, num_particles=n_particles, maxiter=maxiter)
     results.append(res_s[1]);
-    print(f'x = {res_s[0]}') # x = [0 0 0]
-    print(f'f = {res_s[1]}') # f = 0
-    
+    #print(f'x = {res_s[0]}') # x = [0 0 0]
+    #print(f'f = {res_s[1]}') # f = 0
+
 #results = np.around(results, decimals=2)
 mean = np.mean(results)
 std = np.std(results)
